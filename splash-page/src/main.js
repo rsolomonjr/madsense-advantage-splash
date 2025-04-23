@@ -1,89 +1,108 @@
 import AOS from "aos";
-
 document.addEventListener("DOMContentLoaded", function () {
   const surveyContainer = document.getElementById("survey-container");
   const completionMessage = document.getElementById("completion-message");
 
-  // Check if the completion message element exists
-  if (!completionMessage) {
-    console.error("Error: Could not find element with ID 'completion-message'");
-    // Create the completion message element if it doesn't exist
-    createCompletionMessage();
+  // Check if elements exist before using them
+  if (!surveyContainer) {
+    console.error("Error: survey-container element not found");
+    return;
+  }
+
+  // Check if completion message exists, create it if not
+  let completionMessageElement = completionMessage;
+  if (!completionMessageElement) {
+    console.warn("completion-message element not found, creating it");
+    completionMessageElement = document.createElement("div");
+    completionMessageElement.id = "completion-message";
+    completionMessageElement.className = "success-message";
+    completionMessageElement.innerHTML =
+      "<h2>Thank you for your submission!</h2><p>We'll send your AdTech PoV document to your email shortly.</p>";
+    completionMessageElement.style.display = "none";
+    // Insert after survey container
+    surveyContainer.parentNode.insertBefore(
+      completionMessageElement,
+      surveyContainer.nextSibling
+    );
   }
 
   // Check if user has already completed the survey
   checkCompletion().then((completed) => {
-    const updatedCompletionMessage =
-      document.getElementById("completion-message");
-
     if (completed) {
-      if (surveyContainer) {
-        surveyContainer.style.display = "none";
-      }
-      if (updatedCompletionMessage) {
-        updatedCompletionMessage.style.display = "block";
-      }
+      surveyContainer.style.display = "none";
+      completionMessageElement.style.display = "block";
     } else {
-      initializeSurvey();
+      initializeSurvey(completionMessageElement);
     }
   });
 
-  // Initialize AOS animation library if it's loaded
-  if (typeof AOS !== "undefined") {
-    AOS.init({
-      duration: 800,
-      easing: "ease-in-out",
-      once: true,
-    });
+  // Initialize AOS animation library if it's available
+  try {
+    if (AOS) {
+      AOS.init({
+        duration: 800,
+        easing: "ease-in-out",
+        once: true,
+      });
+    }
+  } catch (error) {
+    console.warn("AOS library not available:", error.message);
+    // Load AOS from CDN if it's not available
+    loadAOSfromCDN();
   }
 });
 
-// Create completion message if it doesn't exist
-function createCompletionMessage() {
-  const mainContainer =
-    document.getElementById("survey-container")?.parentNode || document.body;
+function loadAOSfromCDN() {
+  // Add AOS CSS
+  const aosCSS = document.createElement("link");
+  aosCSS.rel = "stylesheet";
+  aosCSS.href = "https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css";
+  document.head.appendChild(aosCSS);
 
-  const messageDiv = document.createElement("div");
-  messageDiv.id = "completion-message";
-  messageDiv.className = "thank-you-message";
-  messageDiv.style.display = "none";
-
-  // Create content for the completion message
-  const heading = document.createElement("h2");
-  heading.textContent = "Thank You for Your Submission!";
-
-  const message = document.createElement("p");
-  message.textContent =
-    "We'll send your free Point of View document to your email shortly.";
-
-  // Append elements
-  messageDiv.appendChild(heading);
-  messageDiv.appendChild(message);
-  mainContainer.appendChild(messageDiv);
-
-  return messageDiv;
+  // Add AOS JS
+  const aosScript = document.createElement("script");
+  aosScript.src = "https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js";
+  aosScript.onload = function () {
+    if (window.AOS) {
+      window.AOS.init({
+        duration: 800,
+        easing: "ease-in-out",
+        once: true,
+      });
+    }
+  };
+  document.body.appendChild(aosScript);
 }
 
 async function checkCompletion() {
   try {
-    // Update this to use your serverless function instead of PHP
-    const response = await fetch("/.netlify/functions/check-user");
+    // Fix: Use absolute path and ensure it's correctly pointing to the PHP file
+    const response = await fetch("/check_completion.php", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Cache-Control": "no-cache",
+      },
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     const data = await response.json();
-    return data.has_submitted; // Note: changed from data.completed to data.has_submitted to match your serverless function
+    console.log("Completion check response:", data);
+    return data.completed;
   } catch (error) {
     console.error("Error checking completion status:", error);
+    // In case of error, assume not completed so user can try the survey
     return false;
   }
 }
 
-function initializeSurvey() {
+function initializeSurvey(completionMessageElement) {
   const surveyContainer = document.getElementById("survey-container");
-
   if (!surveyContainer) {
-    console.error("Error: Could not find element with ID 'survey-container'");
+    console.error("Error: survey-container element not found");
     return;
   }
 
@@ -201,36 +220,33 @@ function initializeSurvey() {
       submitButton.innerHTML =
         '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
-      // Update to use your serverless function instead of PHP
-      const response = await fetch("/.netlify/functions/submit-survey", {
+      // Fix: Use absolute path
+      const response = await fetch("/submit_survey.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(formDataObj),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const result = await response.json();
+      console.log("Survey submission response:", result);
 
       if (result.success) {
         // Show completion message
         surveyContainer.style.display = "none";
-        const completionMessage = document.getElementById("completion-message");
-        if (completionMessage) {
-          completionMessage.style.display = "block";
-          // Scroll to completion message
-          completionMessage.scrollIntoView({ behavior: "smooth" });
-        } else {
-          console.error("Completion message element not found");
-          alert("Thank you for your submission!");
-        }
+        completionMessageElement.style.display = "block";
+
+        // Scroll to completion message
+        completionMessageElement.scrollIntoView({ behavior: "smooth" });
       } else {
         // Show error
-        alert("Error: " + (result.message || "Unknown error"));
+        alert("Error: " + result.message);
         submitButton.disabled = false;
         submitButton.textContent = "Send Me My Free PoV";
       }
