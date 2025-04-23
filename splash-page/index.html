@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MadSense - AdTech Solutions</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <!-- Font Awesome for social icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="splash-container">
+      <img id="logo" src="/src/assets/images/1-01.jpg" alt="MadSense Logo">
+      <h1 id="title">MadSense</h1>
+      <p id="slogan">MadSense, We Make Sense of Mad Tech</p>
+
+      <div id="blurb">
+        <p>We make MADTech make sense in the ever-evolving marketing and advertising technology landscape, by creating clearly
+        written Functional PoV's&trade; to by helping marketers navigate the business implications of product releases, partnerships, and mergers & acquisitions.</p>
+      </div>
+
+      <div id="functional-povs">
+        <h3>MadSense Perspectives</h3>
+        <div class="pov-container">
+          <div class="pov-card" onclick="togglePov(this)">
+            <div class="pov-front">Programmatic Excellence</div>
+            <div class="pov-back">Our programmatic solutions leverage real-time bidding and advanced algorithms to
+              optimize ad placements across the digital ecosystem.</div>
+          </div>
+          <div class="pov-card" onclick="togglePov(this)">
+            <div class="pov-front">Data-Driven Insights</div>
+            <div class="pov-back">We transform raw data into actionable insights, enabling smarter targeting and better
+              campaign performance metrics.</div>
+          </div>
+          <div class="pov-card" onclick="togglePov(this)">
+            <div class="pov-front">Cross-Channel Attribution</div>
+            <div class="pov-back">Our attribution models track customer journeys across all touchpoints, giving you a
+              holistic view of campaign effectiveness.</div>
+          </div>
+          <div class="pov-card" onclick="togglePov(this)">
+            <div class="pov-front">Privacy-First Approach</div>
+            <div class="pov-back">Built with privacy compliance at its core, our solutions keep you ahead of regulations
+              while maintaining targeting effectiveness.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="survey-container">
+        <!-- Survey will be loaded here via JavaScript -->
+      </div>
+
+      <div id="completion-message" style="display: none;">
+        <h2>Thank you for your participation!</h2>
+        <p>You've already answered this survey. We appreciate your input.</p>
+        <a href="https://www.MadSense.tech" class="button">Visit MadSense</a>
+      </div>
+
+      <div id="social-buttons">
+        <a href="https://twitter.com/MadSenseAdTech" target="_blank" class="social-button">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="https://linkedin.com/company/MadSense" target="_blank" class="social-button">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+  <script>
+    function togglePov(element) {
+      element.classList.toggle('flipped');
+    }
+  </script>
+</body>
+
+</html>
