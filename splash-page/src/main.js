@@ -1,5 +1,8 @@
 import "./style.css";
 
+const API_BASE_URL = "https://madsense.tech/api";
+
+
 // Survey questions
 const questions = [
   {
@@ -26,7 +29,7 @@ let formData = {
 // Check if user has already submitted
 async function checkUserSubmission() {
   try {
-  const response = await fetch("/.netlify/functions/check-user");
+  const response = await fetch(`${API_BASE_URL}/check_user.php`);
     const data = await response.json();
 
     if (data.has_submitted) {
@@ -173,7 +176,7 @@ async function handleFormSubmit(event) {
   }
 
   try {
-    const response = await fetch("/.netlify/functions/submit-survey", {
+    const response = await fetch(`${API_BASE_URL}/submit_survey.php`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
