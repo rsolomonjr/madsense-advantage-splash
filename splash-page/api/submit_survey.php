@@ -1,6 +1,6 @@
 <?php
 require_once 'config.php';
-require_once 'vendor/autoload.php'; // For TCPDF library and PHPMailer
+require_once 'vendor/autoload.php'; // For PHPMailer
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -19,7 +19,7 @@ $name = $data['name'];
 $email = $data['email'];
 $company = $data['company'];
 $jobTitle = $data['jobTitle'];
-$ip_address = $_SERVER['REMOTE_ADDR'];
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '0.0.0.0';
 $question1_answer = $data['question1_answer'];
 $question2_answer = $data['question2_answer'];
 
@@ -29,148 +29,120 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-// Check if user has already submitted
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM survey_responses WHERE ip_address = ? OR email = ?");
-$stmt->bind_param("ss", $ip_address, $email);
-$stmt->execute();
-$result = $stmt->get_result();
-$check = $result->fetch_assoc();
+try {
+    // Check if table exists and create it if not
+    $tableCheck = $conn->query("SHOW TABLES LIKE 'survey_responses'");
+    if ($tableCheck->num_rows == 0) {
+        $createTable = "CREATE TABLE IF NOT EXISTS survey_responses (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            company VARCHAR(255) NOT NULL,
+            job_title VARCHAR(255) NOT NULL,
+            question1_answer VARCHAR(255) NOT NULL,
+            question2_answer TEXT NOT NULL,
+            ip_address VARCHAR(45) NOT NULL,
+            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )";
+        
+        if (!$conn->query($createTable)) {
+            throw new Exception("Failed to create table: " . $conn->error);
+        }
+    }
 
-if ($check['count'] > 0) {
-    echo json_encode(['success' => false, 'message' => 'You have already submitted a response']);
-    exit;
-}
-
-// Insert the survey response
-$stmt = $conn->prepare("INSERT INTO survey_responses (name, email, company, job_title, ip_address, question1_answer, question2_answer) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssss", $name, $email, $company, $jobTitle, $ip_address, $question1_answer, $question2_answer);
-
-if ($stmt->execute()) {
-    // Generate PDF
-    $pdfPath = generatePDF($data);
+    // Check if user has already submitted
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM survey_responses WHERE ip_address = ? OR email = ?");
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $conn->error);
+    }
     
-    if ($pdfPath && sendEmail($name, $email, $pdfPath, $question1_answer)) {
-        echo json_encode(['success' => true, 'message' => 'Survey submitted successfully']);
-    } else {
-        echo json_encode(['success' => true, 'message' => 'Survey submitted, but there was an issue sending the email']);
+    $stmt->bind_param("ss", $ip_address, $email);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Execute failed: " . $stmt->error);
     }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Failed to submit survey: ' . $conn->error]);
+    
+    $result = $stmt->get_result();
+    $check = $result->fetch_assoc();
+
+    if ($check['count'] > 0) {
+        echo json_encode(['success' => false, 'message' => 'You have already submitted a response']);
+        exit;
+    }
+
+    // Insert the survey response
+    $stmt = $conn->prepare("INSERT INTO survey_responses (name, email, company, job_title, ip_address, question1_answer, question2_answer) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $conn->error);
+    }
+    
+    $stmt->bind_param("sssssss", $name, $email, $company, $jobTitle, $ip_address, $question1_answer, $question2_answer);
+
+    if ($stmt->execute()) {
+        // Get the PDF file path based on the selected topic
+        $pdfPath = getPdfPath($question1_answer);
+        
+        if ($pdfPath && sendEmail($name, $email, $pdfPath, $question1_answer)) {
+            echo json_encode(['success' => true, 'message' => 'Survey submitted successfully']);
+        } else {
+            echo json_encode(['success' => true, 'message' => 'Survey submitted, but there was an issue sending the email']);
+        }
+    } else {
+        throw new Exception("Failed to submit survey: " . $stmt->error);
+    }
+
+    $stmt->close();
+} catch (Exception $e) {
+    // Log the error
+    error_log('Survey submission error: ' . $e->getMessage());
+    
+    // Return an error response
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+} finally {
+    // Close the database connection
+    $conn->close();
 }
 
-$stmt->close();
-$conn->close();
-
-// Function to generate PDF based on survey answers
-function generatePDF($data) {
-    try {
-        // Get POV content based on the selected topic
-        $povContent = getPovContent($data['question1_answer']);
-        
-        // Set up TCPDF
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-        
-        // Set document information
-        $pdf->SetCreator('MadSense AdTech');
-        $pdf->SetAuthor('MadSense AdTech');
-        $pdf->SetTitle('MadSense Functional PoV™');
-        $pdf->SetSubject('AdTech Point of View');
-        
-        // Set default header and footer data
-        $pdf->setHeaderData('', 0, 'MadSense Functional PoV™', 'Generated for: ' . $data['name'] . ' | ' . date('F j, Y'));
-        
-        // Set header and footer fonts
-        $pdf->setHeaderFont(Array('helvetica', '', 10));
-        $pdf->setFooterFont(Array('helvetica', '', 8));
-        
-        // Set margins
-        $pdf->SetMargins(15, 25, 15);
-        $pdf->SetHeaderMargin(5);
-        $pdf->SetFooterMargin(10);
-        
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, 15);
-        
-        // Set font
-        $pdf->SetFont('helvetica', '', 11);
-        
-        // Add a page
-        $pdf->AddPage();
-        
-        // Add logo
-        $imagePath = $_SERVER['DOCUMENT_ROOT'] . '/src/assets/images/1-01.jpg';
-        if (file_exists($imagePath)) {
-            $pdf->Image($imagePath, 15, 15, 30, 0, 'JPG', '', 'T', false, 300, 'L', false, false, 0, false, false, false);
+// Function to get the PDF file path based on topic
+function getPdfPath($topicCode) {
+    // Define PDF paths in src/assets/ directory
+    $pdfFiles = [
+        'programmatic' => 'src/assets/pdfs/MadSense_Programmatic_Advertising_PoV.pdf',
+        'identities' => 'src/assets/pdfs/MadSense_Identity_Resolution_PoV.pdf',
+        'cookies' => 'src/assets/pdfs/MadSense_Cookieless_Targeting_PoV.pdf',
+        'attribution' => 'src/assets/pdfs/MadSense_Attribution_PoV.pdf',
+        'privacy' => 'src/assets/pdfs/MadSense_Privacy_Regulations_PoV.pdf',
+        'ai' => 'src/assets/pdfs/MadSense_AI_Advertising_PoV.pdf',
+        'default' => 'src/assets/pdfs/MadSense_AdTech_PoV.pdf'
+    ];
+    
+    // Get the path for the selected topic or use default
+    $pdfPath = isset($pdfFiles[$topicCode]) ? $pdfFiles[$topicCode] : $pdfFiles['default'];
+    
+    // Check if file exists
+    $absolutePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $pdfPath;
+    if (!file_exists($absolutePath)) {
+        error_log('PDF file not found: ' . $absolutePath);
+        // If the specific PDF doesn't exist, try to use the default one
+        $absolutePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $pdfFiles['default'];
+        if (!file_exists($absolutePath)) {
+            error_log('Default PDF file not found: ' . $absolutePath);
+            return false;
         }
-        
-        // Add title
-        $pdf->SetFont('helvetica', 'B', 18);
-        $pdf->Cell(0, 20, '', 0, 1);
-        $pdf->Cell(0, 10, 'Functional Point of View™: ' . getTopicTitle($data['question1_answer']), 0, 1);
-        
-        // Add date and personalization
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->Cell(0, 10, 'Created for: ' . $data['name'] . ' at ' . $data['company'], 0, 1);
-        $pdf->Cell(0, 10, 'Date: ' . date('F j, Y'), 0, 1);
-        $pdf->Ln(5);
-        
-        // Add intro
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->Cell(0, 10, 'Executive Summary', 0, 1);
-        $pdf->SetFont('helvetica', '', 11);
-       $pdf->writeHTML('<p>Based on your response regarding challenges with "' . htmlspecialchars($data['question2_answer']) . '", we\'ve prepared this analysis to help you navigate the complexities of ' . getTopicTitle($data['question1_answer']) . '.</p>');
-        $pdf->Ln(5);
-        
-        // Add main content
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->Cell(0, 10, 'Industry Analysis', 0, 1);
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->writeHTML($povContent['industry_analysis']);
-        $pdf->Ln(5);
-        
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->Cell(0, 10, 'Key Considerations', 0, 1);
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->writeHTML($povContent['key_considerations']);
-        $pdf->Ln(5);
-        
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->Cell(0, 10, 'Recommendations', 0, 1);
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->writeHTML($povContent['recommendations']);
-        $pdf->Ln(5);
-        
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->Cell(0, 10, 'Next Steps', 0, 1);
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->writeHTML($povContent['next_steps']);
-        $pdf->Ln(10);
-        
-        // Add footer note
-        $pdf->SetFont('helvetica', 'I', 10);
-        $pdf->Cell(0, 10, 'For more information or to schedule a consultation, please contact MadSense at info@madsense.tech', 0, 1);
-        
-        // Create directory if it doesn't exist
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        // Save the PDF
-        $filename = 'MadSense_PoV_' . sanitizeFilename($data['name']) . '_' . date('Y-m-d') . '.pdf';
-        $filepath = $uploadDir . $filename;
-        $pdf->Output($filepath, 'F');
-        
-        return $filepath;
-    } catch (Exception $e) {
-        error_log('PDF Generation Error: ' . $e->getMessage());
-        return false;
     }
+    
+    return $absolutePath;
 }
 
 // Function to send email with PDF attachment
 function sendEmail($name, $email, $pdfPath, $topicCode) {
     try {
+        // Define SMTP constants if not available in config.php
+        if (!defined('SMTP_HOST')) define('SMTP_HOST', 'mail.madsense.tech');
+        if (!defined('SMTP_USERNAME')) define('SMTP_USERNAME', 'info@madsense.tech');
+        if (!defined('SMTP_PASSWORD')) define('SMTP_PASSWORD', 'your_email_password');
+        if (!defined('SMTP_PORT')) define('SMTP_PORT', 587);
+        
         $mail = new PHPMailer(true);
         
         // Server settings
@@ -213,9 +185,9 @@ function sendEmail($name, $email, $pdfPath, $topicCode) {
                 </div>
                 <div class="content">
                     <p>Hello ' . htmlspecialchars($name) . ',</p>
-                    <p>Thank you for participating in our survey. As promised, we've prepared a custom Functional Point of View™ on ' . getTopicTitle($topicCode) . ' for you, based on your responses.</p>
+                    <p>Thank you for participating in our survey. As promised, we\'ve prepared a custom Functional Point of View™ on ' . getTopicTitle($topicCode) . ' for you, based on your responses.</p>
                     <p>Please find the attached PDF with our analysis and recommendations. We hope you find it valuable!</p>
-                    <p>If you have any questions or would like to discuss this topic further, please don't hesitate to reach out.</p>
+                    <p>If you have any questions or would like to discuss this topic further, please don\'t hesitate to reach out.</p>
                     <p style="text-align: center; margin-top: 30px;">
                         <a href="https://www.madsense.tech" class="button">Visit Our Website</a>
                     </p>
@@ -253,48 +225,3 @@ function getTopicTitle($topicCode) {
     
     return isset($topics[$topicCode]) ? $topics[$topicCode] : 'AdTech';
 }
-
-// Helper function to sanitize filename
-function sanitizeFilename($filename) {
-    $filename = preg_replace('/[^a-z0-9]+/', '-', strtolower($filename));
-    return trim($filename, '-');
-}
-
-// Helper function to get POV content based on topic
-function getPovContent($topicCode) {
-    $content = [];
-    
-    switch ($topicCode) {
-        case 'programmatic':
-            $content['industry_analysis'] = '<p>The programmatic advertising landscape continues to evolve rapidly, with global spend exceeding $200 billion annually. Recent industry shifts include the push toward supply path optimization (SPO), the rise of programmatic guaranteed deals, and increased investment in CTV and audio channels.</p><p>Key players are focusing on transparency initiatives, with demand-side platforms implementing measures to provide greater visibility into the programmatic supply chain. Meanwhile, supply-side platforms are differentiating through unique inventory access, data offerings, and optimization tools.</p>';
-            $content['key_considerations'] = '<ul><li><strong>Supply Chain Transparency:</strong> Visibility into the programmatic supply chain remains challenging, with numerous intermediaries potentially adding costs and complexity.</li><li><strong>Identity Challenges:</strong> Cookie deprecation and mobile identifier restrictions are forcing programmatic buyers to develop alternative targeting strategies.</li><li><strong>Creative Optimization:</strong> Dynamic creative optimization and personalization opportunities are often underutilized in programmatic campaigns.</li><li><strong>Channel Integration:</strong> Cross-channel programmatic execution requires sophisticated planning and measurement approaches.</li></ul>';
-            $content['recommendations'] = '<p>Based on current market conditions, we recommend:</p><ul><li>Implement formal supply path optimization protocols to reduce ad tech fees and improve transparency</li><li>Develop a balanced identity strategy utilizing first-party data, contextual signals, and privacy-compliant identifiers</li><li>Consider direct programmatic deals with premium publishers where audience alignment is strong</li><li>Explore emerging programmatic channels like DOOH and audio if they align with audience behaviors</li><li>Invest in creative testing frameworks to maximize the impact of programmatic placements</li></ul>';
-            $content['next_steps'] = '<p>To advance your programmatic capabilities, consider:</p><ol><li>Conducting a programmatic supply chain audit to identify optimization opportunities</li><li>Evaluating your DSP stack against current and future campaign requirements</li><li>Developing clear KPIs that align with business outcomes rather than just campaign metrics</li><li>Creating a roadmap for expanding programmatic capabilities across emerging channels</li></ol>';
-            break;
-            
-        case 'identities':
-            $content['industry_analysis'] = '<p>Identity resolution has become a critical capability as traditional identifiers face increasing restrictions. The industry has responded with a proliferation of alternative approaches, including deterministic ID solutions, probabilistic matching methodologies, and clean room technologies.</p><p>Enterprise brands are increasingly investing in customer data platforms (CDPs) to unify first-party data assets, while publishers are exploring authenticated traffic solutions to maintain addressability. Meanwhile, walled gardens continue to strengthen their positions through vast logged-in user bases.</p>';
-            $content['key_considerations'] = '<ul><li><strong>First-Party Data Strategy:</strong> The quality and scale of first-party data now directly impacts addressability capabilities.</li><li><strong>Technology Integration:</strong> Identity resolution requires careful integration across multiple systems and platforms.</li><li><strong>Privacy Compliance:</strong> Evolving regulations introduce complexity to identity data collection and activation.</li><li><strong>Measurement Impact:</strong> Changes to identity infrastructure directly affect attribution and measurement capabilities.</li></ul>';
-            $content['recommendations'] = '<p>Based on current market conditions, we recommend:</p><ul><li>Develop a comprehensive first-party data strategy that includes both collection and activation planning</li><li>Establish a formal identity graph that unifies customer identities across touchpoints</li><li>Implement a multi-faceted approach that leverages deterministic matching where possible and probabilistic where necessary</li><li>Explore data clean room solutions for advanced use cases involving sensitive data</li><li>Test and evaluate universal ID solutions while maintaining flexibility as the landscape evolves</li></ul>';
-            $content['next_steps'] = '<p>To advance your identity resolution capabilities, consider:</p><ol><li>Conducting an audit of your current identity infrastructure and data assets</li><li>Evaluating identity resolution vendors against your specific business requirements</li><li>Developing clear governance processes for identity data management</li><li>Creating test-and-learn programs to quantify the value of improved identity resolution</li></ol>';
-            break;
-            
-        case 'cookies':
-            $content['industry_analysis'] = '<p>The deprecation of third-party cookies in Chrome has accelerated industry transformation toward alternative targeting approaches. Major changes include Google\'s Privacy Sandbox initiatives, Apple\'s continuing privacy restrictions, and the emergence of numerous cookieless targeting solutions.</p><p>Publishers have responded by enhancing first-party data offerings, while advertisers increasingly test contextual targeting, cohort-based approaches, and probabilistic solutions. Measurement is similarly evolving, with greater emphasis on media mix modeling and incrementality testing.</p>';
-            $content['key_considerations'] = '<ul><li><strong>Audience Targeting:</strong> Cookie deprecation requires new approaches to audience definition and targeting.</li><li><strong>Measurement Disruption:</strong> Attribution and measurement frameworks need adaptation for environments without persistent identifiers.</li><li><strong>Publisher Relationships:</strong> Direct publisher relationships become more valuable for access to first-party data and addressable inventory.</li><li><strong>Contextual Renaissance:</strong> Advanced contextual targeting offers opportunities beyond traditional keyword approaches.</li></ul>';
-            $content['recommendations'] = '<p>Based on current market conditions, we recommend:</p><ul><li>Develop a balanced targeting strategy that reduces reliance on third-party cookies</li><li>Invest in first-party data collection, management, and activation capabilities</li><li>Evaluate contextual intelligence platforms that go beyond basic keyword targeting</li><li>Test Google\'s Privacy Sandbox solutions while maintaining realistic expectations about their effectiveness</li><li>Consider direct publisher relationships that provide authenticated audience access</li></ul>';
-            $content['next_steps'] = '<p>To prepare for a cookieless future, consider:</p><ol><li>Conducting a cookie dependency audit across your marketing technology stack</li><li>Developing a testing framework to evaluate alternative targeting approaches</li><li>Creating a first-party data strategy that addresses both collection and activation</li><li>Establishing new measurement methodologies that reduce reliance on cookie-based attribution</li></ol>';
-            break;
-            
-        default:
-            // Generic content for other topics
-            $content['industry_analysis'] = '<p>The AdTech landscape continues to evolve rapidly, with technological innovation driving new capabilities and regulatory changes reshaping industry practices. Enterprise organizations are increasingly focused on establishing direct consumer relationships, while building first-party data assets to reduce dependence on third-party solutions.</p><p>Recent industry trends include the continued growth of programmatic channels, increasing focus on measurement quality, and heightened attention to privacy compliance and responsible data usage.</p>';
-            $content['key_considerations'] = '<ul><li><strong>Strategic Planning:</strong> AdTech capabilities should align with broader marketing and business objectives.</li><li><strong>Integration Challenges:</strong> Connecting disparate technologies remains a key challenge for many organizations.</li><li><strong>Privacy Compliance:</strong> Evolving regulations require constant adaptation of data practices.</li><li><strong>Measurement Complexity:</strong> Attribution across channels and platforms requires sophisticated approaches.</li></ul>';
-            $content['recommendations'] = '<p>Based on current market conditions, we recommend:</p><ul><li>Develop a comprehensive AdTech strategy that aligns with business objectives</li><li>Establish clear data governance policies that address privacy regulations</li><li>Invest in first-party data collection and activation capabilities</li><li>Create measurement frameworks that combine multiple methodologies</li><li>Prioritize integration capabilities when evaluating new technology</li></ul>';
-            $content['next_steps'] = '<p>To advance your AdTech capabilities, consider:</p><ol><li>Conducting an audit of your current technology stack</li><li>Evaluating your data strategy against industry best practices</li><li>Developing a roadmap for capability development</li><li>Creating test-and-learn programs to evaluate new approaches</li></ol>';
-            break;
-    }
-    
-    return $content;
-}
-?>
