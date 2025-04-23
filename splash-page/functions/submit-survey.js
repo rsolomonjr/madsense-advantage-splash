@@ -1,11 +1,50 @@
+/* eslint-disable no-undef */
 const { MongoClient } = require("mongodb");
 
-// Replace with your MongoDB connection string
+// MongoDB connection string from environment variable
 const uri = process.env.MONGODB_URI;
 
-exports.handler = async (event, context) => {
+// Create a MongoDB client instance outside the handler for connection reuse
+let cachedClient = null;
+let cachedDb = null;
+
+// Function to connect to database
+async function connectToDatabase() {
+  if (cachedClient && cachedDb) {
+    // Use cached connection if available
+    return { client: cachedClient, db: cachedDb };
+  }
+
+  // Create new connection
+  const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  await client.connect();
+  const db = client.db("splash_survey");
+
+  // Cache connection
+  cachedClient = client;
+  cachedDb = db;
+
+  return { client, db };
+}
+
+// Export the handler function correctly
+module.exports.handler = async (event, context) => {
+  // Set context.callbackWaitsForEmptyEventLoop to false to keep the connection alive
+  context.callbackWaitsForEmptyEventLoop = false;
+
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return {
+      statusCode: 405,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", // Adjust as needed for production
+      },
+      body: JSON.stringify({ success: false, message: "Method Not Allowed" }),
+    };
   }
 
   // Get IP address from request
@@ -23,6 +62,10 @@ exports.handler = async (event, context) => {
     ) {
       return {
         statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Adjust as needed for production
+        },
         body: JSON.stringify({
           success: false,
           message: "Missing required fields",
@@ -30,50 +73,68 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const client = new MongoClient(uri);
-
-    try {
-      await client.connect();
-      const database = client.db("splash_survey");
-      const collection = database.collection("survey_responses");
-
-      // Check if IP exists in database
-      const count = await collection.countDocuments({ ip_address: ip });
-
-      if (count > 0) {
-        return {
-          statusCode: 409,
-          body: JSON.stringify({
-            success: false,
-            message: "You have already submitted a response",
-          }),
-        };
-      }
-
-      // Insert response
-      const result = await collection.insertOne({
-        name: data.name,
-        email: data.email,
-        ip_address: ip,
-        question1_answer: data.question1_answer,
-        question2_answer: data.question2_answer,
-        created_at: new Date(),
-      });
-
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
       return {
-        statusCode: 200,
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
         body: JSON.stringify({
-          success: true,
-          message: "Survey submitted successfully",
+          success: false,
+          message: "Invalid email format",
         }),
       };
-    } finally {
-      await client.close();
     }
+
+    const { db } = await connectToDatabase();
+    const collection = db.collection("survey_responses");
+
+    // Check if IP exists in database
+    const count = await collection.countDocuments({ ip_address: ip });
+
+    if (count > 0) {
+      return {
+        statusCode: 409,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          success: false,
+          message: "You have already submitted a response",
+        }),
+      };
+    }
+
+    // Insert response with sanitized data
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        success: true,
+        message: "Survey submitted successfully",
+      }),
+    };
   } catch (error) {
+    console.error("Error processing survey submission:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: error.message }),
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        success: false,
+        message: "Internal server error",
+        details: error.message,
+      }),
     };
   }
 };

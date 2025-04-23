@@ -5,74 +5,128 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MadSense - AdTech Solutions</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- AOS animation library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
   <link rel="stylesheet" href="/src/style.css">
-  <!-- Font Awesome for social icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
   <div id="app">
-    <div id="splash-container">
-      <img id="logo" src="/src/assets/images/1-01.jpg" alt="MadSense Logo">
-      <h1 id="title">MadSense</h1>
-      <p id="slogan">MADSense. We make MADTech make sense</p>
+    <div class="gradient-bg">
+      <div class="gradient-overlay"></div>
+      <header>
+        <nav>
+          <div class="logo-container">
+            <img id="logo" src="/src/assets/images/1-01.jpg" alt="MadSense Logo">
+            <h1 id="title">MadSense</h1>
+          </div>
+          <div class="social-links">
+            <a href="https://twitter.com/MadSenseAdTech" target="_blank" class="social-link">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://linkedin.com/company/MadSense" target="_blank" class="social-link">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+        </nav>
+      </header>
 
-      <div id="blurb">
-        <p>We make MADTech make sense in the ever-evolving marketing and advertising technology landscape, by creating clearly
-        written Functional PoV's&trade; by helping marketers navigate the business implications of product releases, partnerships, and mergers & acquisitions.</p>
-      </div>
-
-      <!-- <div id="functional-povs">
-        <h3>MadSense Perspectives</h3>
-        <div class="pov-container">
-          <div class="pov-card" onclick="togglePov(this)">
-            <div class="pov-front">Programmatic Excellence</div>
-            <div class="pov-back">Our programmatic solutions leverage real-time bidding and advanced algorithms to
-              optimize ad placements across the digital ecosystem.</div>
-          </div>
-          <div class="pov-card" onclick="togglePov(this)">
-            <div class="pov-front">Data-Driven Insights</div>
-            <div class="pov-back">We transform raw data into actionable insights, enabling smarter targeting and better
-              campaign performance metrics.</div>
-          </div>
-          <div class="pov-card" onclick="togglePov(this)">
-            <div class="pov-front">Cross-Channel Attribution</div>
-            <div class="pov-back">Our attribution models track customer journeys across all touchpoints, giving you a
-              holistic view of campaign effectiveness.</div>
-          </div>
-          <div class="pov-card" onclick="togglePov(this)">
-            <div class="pov-front">Privacy-First Approach</div>
-            <div class="pov-back">Built with privacy compliance at its core, our solutions keep you ahead of regulations
-              while maintaining targeting effectiveness.</div>
-          </div>
+      <section id="hero" data-aos="fade-up">
+        <h2 class="tagline">We make MADTech make sense</h2>
+        <p class="hero-text">Navigate the ever-evolving marketing and advertising technology landscape with our clearly
+          written Functional PoV's&trade;</p>
+        <div class="scroll-indicator">
+          <p>Get Your Free PoV</p>
+          <i class="fas fa-chevron-down"></i>
         </div>
-      </div> -->
-      <div class="instructions">Fill out the form below and we'll send you a free PoV!</div>
-      <div id="survey-container">
-        <!-- Survey will be loaded here via JavaScript -->
-      </div>
-
-      <div id="completion-message" style="display: none;">
-        <h2>Thank you for your participation!</h2>
-        <p>You've already answered this survey. We appreciate your input.</p>
-        <a href="https://www.MadSense.tech" class="button">Visit MadSense</a>
-      </div>
-
-      <div id="social-buttons">
-        <a href="https://twitter.com/MadSenseAdTech" target="_blank" class="social-button">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a href="https://linkedin.com/company/MadSense" target="_blank" class="social-button">
-          <i class="fab fa-linkedin-in"></i>
-        </a>
-      </div>
+      </section>
     </div>
+
+    <main>
+      <section id="about" data-aos="fade-up">
+        <div class="section-header">
+          <h3>About MadSense</h3>
+          <div class="underline"></div>
+        </div>
+        <p><strong>MADTech is complex!</strong> We help marketers navigate the business implications of product releases, partnerships, and mergers &amp; acquisitions in the AdTech ecosystem. Our insights translate complex technology changes into practical business impact assessments.</p>
+      </section>
+
+      <section id="survey-section" data-aos="fade-up" data-aos-delay="100">
+        <div class="section-header">
+          <h3>Get Your Free Point of View</h3>
+          <div class="underline"></div>
+        </div>
+        <p class="survey-intro">Complete our quick survey, and we'll email you a custom Functional PoV&trade; on your
+          chosen AdTech topic.</p>
+
+        <div id="survey-container">
+          <!-- Survey will be loaded here via JavaScript -->
+        </div>
+
+        <div id="completion-message" style="display: none;">
+          <div class="success-animation">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h2>Thanks for participating!</h2>
+          <p>Your custom PoV is on its way to your inbox. Please check your email shortly.</p>
+          <a href="https://www.MadSense.tech" class="button">Visit MadSense</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="/src/assets/images/1-01.jpg" alt="MadSense Logo" class="footer-logo-img">
+          <p>MADSense AdTech Solutions</p>
+        </div>
+        <div class="footer-links">
+          <a href="#" class="footer-link">Privacy Policy</a>
+          <a href="#" class="footer-link">Terms of Service</a>
+          <a href="#" class="footer-link">Contact Us</a>
+        </div>
+        <div class="footer-social">
+          <a href="https://twitter.com/MadSenseAdTech" target="_blank" class="footer-social-link">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="https://linkedin.com/company/MadSense" target="_blank" class="footer-social-link">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+        </div>
+      </div>
+      <div class="copyright">
+        &copy; 2025 MadSense AdTech Solutions. All rights reserved.
+      </div>
+    </footer>
   </div>
-  <script type="module" src="/src/main.js"></script>
+
+  <!-- AOS Animation Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script type="module" src="src/main.js"></script>
   <script>
-    function togglePov(element) {
-      element.classList.toggle('flipped');
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize AOS animation library
+      AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+      });
+
+      // Smooth scroll for the "Get Your Free PoV" button
+      document.querySelector('.scroll-indicator').addEventListener('click', function () {
+        document.querySelector('#survey-section').scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
   </script>
 </body>
 

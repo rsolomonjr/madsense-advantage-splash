@@ -1,203 +1,264 @@
-import "./style.css";
+import AOS from "aos";
 
-const API_BASE_URL = "https://madsense.tech/api";
+document.addEventListener("DOMContentLoaded", function () {
+  const surveyContainer = document.getElementById("survey-container");
+  const completionMessage = document.getElementById("completion-message");
 
+  // Check if the completion message element exists
+  if (!completionMessage) {
+    console.error("Error: Could not find element with ID 'completion-message'");
+    // Create the completion message element if it doesn't exist
+    createCompletionMessage();
+  }
 
-// Survey questions
-const questions = [
-  {
-    id: "question1",
-    question: "Which AdTech challenge is your business currently facing?",
-    type: "textarea",
-  },
-  {
-    id: "question2",
-    question: "What metrics are most important for your advertising campaigns?",
-    type: "textarea",
-  },
-];
+  // Check if user has already completed the survey
+  checkCompletion().then((completed) => {
+    const updatedCompletionMessage =
+      document.getElementById("completion-message");
 
-// State
-let currentQuestion = 0;
-let formData = {
-  name: "",
-  email: "",
-  question1_answer: "",
-  question2_answer: "",
-};
-
-// Check if user has already submitted
-async function checkUserSubmission() {
-  try {
-  const response = await fetch(`${API_BASE_URL}/check_user.php`);
-    const data = await response.json();
-
-    if (data.has_submitted) {
-      document.getElementById("survey-container").style.display = "none";
-      document.getElementById("completion-message").style.display = "block";
+    if (completed) {
+      if (surveyContainer) {
+        surveyContainer.style.display = "none";
+      }
+      if (updatedCompletionMessage) {
+        updatedCompletionMessage.style.display = "block";
+      }
     } else {
-      renderSurveyForm();
+      initializeSurvey();
     }
+  });
+
+  // Initialize AOS animation library if it's loaded
+  if (typeof AOS !== "undefined") {
+    AOS.init({
+      duration: 800,
+      easing: "ease-in-out",
+      once: true,
+    });
+  }
+});
+
+// Create completion message if it doesn't exist
+function createCompletionMessage() {
+  const mainContainer =
+    document.getElementById("survey-container")?.parentNode || document.body;
+
+  const messageDiv = document.createElement("div");
+  messageDiv.id = "completion-message";
+  messageDiv.className = "thank-you-message";
+  messageDiv.style.display = "none";
+
+  // Create content for the completion message
+  const heading = document.createElement("h2");
+  heading.textContent = "Thank You for Your Submission!";
+
+  const message = document.createElement("p");
+  message.textContent =
+    "We'll send your free Point of View document to your email shortly.";
+
+  // Append elements
+  messageDiv.appendChild(heading);
+  messageDiv.appendChild(message);
+  mainContainer.appendChild(messageDiv);
+
+  return messageDiv;
+}
+
+async function checkCompletion() {
+  try {
+    // Update this to use your serverless function instead of PHP
+    const response = await fetch("/.netlify/functions/check-user");
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.has_submitted; // Note: changed from data.completed to data.has_submitted to match your serverless function
   } catch (error) {
-    console.error("Error checking user submission:", error);
-    renderSurveyForm();
+    console.error("Error checking completion status:", error);
+    return false;
   }
 }
 
-// Render the survey form
-function renderSurveyForm() {
+function initializeSurvey() {
   const surveyContainer = document.getElementById("survey-container");
 
-  // Create form element
+  if (!surveyContainer) {
+    console.error("Error: Could not find element with ID 'survey-container'");
+    return;
+  }
+
+  // Create survey form
   const form = document.createElement("form");
   form.className = "survey-form";
-  form.id = "survey-form";
-  form.onsubmit = handleFormSubmit;
+  form.setAttribute("id", "povSurvey");
 
-  // Initial form fields (name and email)
-  if (currentQuestion === 0) {
-    form.innerHTML = `
-      <div class="form-group">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" required value="${
-          formData.name
-        }">
-      </div>
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required value="${
-          formData.email
-        }">
-      </div>
-      <div class="form-group">
-        <label for="${questions[currentQuestion].id}">${
-      questions[currentQuestion].question
-    }</label>
-        <textarea id="${questions[currentQuestion].id}" name="${
-      questions[currentQuestion].id
-    }" required>${
-      formData[`${questions[currentQuestion].id}_answer`] || ""
-    }</textarea>
-      </div>
-      <div id="nav-buttons">
-        <button type="button" id="prev-button" disabled>Previous</button>
-        <button type="button" id="next-button" class="button">Next</button>
-      </div>
-    `;
-  }
+  // Personal information section
+  const personalInfoSection = document.createElement("div");
+  personalInfoSection.className = "form-section";
+
+  // Full Name field
+  const nameGroup = createFormGroup("name", "Full Name", "text", true);
+  personalInfoSection.appendChild(nameGroup);
+
+  // Email field
+  const emailGroup = createFormGroup("email", "Email Address", "email", true);
+  personalInfoSection.appendChild(emailGroup);
+
+  // Company field
+  const companyGroup = createFormGroup("company", "Company Name", "text", true);
+  personalInfoSection.appendChild(companyGroup);
+
+  // Job Title field
+  const titleGroup = createFormGroup("jobTitle", "Job Title", "text", true);
+  personalInfoSection.appendChild(titleGroup);
+
+  form.appendChild(personalInfoSection);
+
+  // Survey questions section
+  const questionsSection = document.createElement("div");
+  questionsSection.className = "form-section";
+
+  // Question 1
+  const q1Group = document.createElement("div");
+  q1Group.className = "form-group";
+
+  const q1Label = document.createElement("label");
+  q1Label.textContent =
+    "Which AdTech topic are you most interested in receiving a PoV about?";
+  q1Label.setAttribute("for", "question1_answer");
+  q1Group.appendChild(q1Label);
+
+  const q1Select = document.createElement("select");
+  q1Select.id = "question1_answer";
+  q1Select.name = "question1_answer";
+  q1Select.required = true;
+
+  const topics = [
+    { value: "", text: "Select an option", disabled: true, selected: true },
+    { value: "programmatic", text: "Programmatic Advertising" },
+    { value: "identities", text: "Identity Resolution" },
+    { value: "cookies", text: "Cookieless Targeting" },
+    { value: "attribution", text: "Multi-touch Attribution" },
+    { value: "privacy", text: "Privacy Regulations" },
+    { value: "ai", text: "AI in Advertising" },
+  ];
+
+  topics.forEach((topic) => {
+    const option = document.createElement("option");
+    option.value = topic.value;
+    option.textContent = topic.text;
+    if (topic.disabled) option.disabled = true;
+    if (topic.selected) option.selected = true;
+    q1Select.appendChild(option);
+  });
+
+  q1Group.appendChild(q1Select);
+  questionsSection.appendChild(q1Group);
+
   // Question 2
-  else if (currentQuestion === 1) {
-    form.innerHTML = `
-      <div class="form-group">
-        <label for="${questions[currentQuestion].id}">${
-      questions[currentQuestion].question
-    }</label>
-        <textarea id="${questions[currentQuestion].id}" name="${
-      questions[currentQuestion].id
-    }" required>${
-      formData[`${questions[currentQuestion].id}_answer`] || ""
-    }</textarea>
-      </div>
-      <div id="nav-buttons">
-        <button type="button" id="prev-button">Previous</button>
-        <button type="submit" id="submit-button" class="button">Submit</button>
-      </div>
-    `;
-  }
+  const q2Group = document.createElement("div");
+  q2Group.className = "form-group";
 
-  surveyContainer.innerHTML = "";
+  const q2Label = document.createElement("label");
+  q2Label.textContent =
+    "What is your biggest challenge with marketing technology?";
+  q2Label.setAttribute("for", "question2_answer");
+  q2Group.appendChild(q2Label);
+
+  const q2Textarea = document.createElement("textarea");
+  q2Textarea.id = "question2_answer";
+  q2Textarea.name = "question2_answer";
+  q2Textarea.rows = 4;
+  q2Textarea.required = true;
+  q2Group.appendChild(q2Textarea);
+
+  questionsSection.appendChild(q2Group);
+  form.appendChild(questionsSection);
+
+  // Submit button
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.className = "button";
+  submitButton.textContent = "Send Me My Free PoV";
+  form.appendChild(submitButton);
+
+  // Add form to container
   surveyContainer.appendChild(form);
 
-  // Add event listeners
-  if (currentQuestion === 0) {
-    document
-      .getElementById("next-button")
-      .addEventListener("click", handleNextClick);
-  } else {
-    document
-      .getElementById("prev-button")
-      .addEventListener("click", handlePrevClick);
-  }
-}
+  // Form submission handler
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-// Handle form navigation
-function handleNextClick() {
-  // Save current form data
-  formData.name = document.getElementById("name").value;
-  formData.email = document.getElementById("email").value;
-  formData[`${questions[currentQuestion].id}_answer`] = document.getElementById(
-    questions[currentQuestion].id
-  ).value;
-
-  // Validate fields
-  if (
-    !formData.name ||
-    !formData.email ||
-    !formData[`${questions[currentQuestion].id}_answer`]
-  ) {
-    alert("Please fill out all fields");
-    return;
-  }
-
-  // Move to next question
-  currentQuestion++;
-  renderSurveyForm();
-}
-
-function handlePrevClick() {
-  // Save current form data
-  formData[`${questions[currentQuestion].id}_answer`] = document.getElementById(
-    questions[currentQuestion].id
-  ).value;
-
-  // Move to previous question
-  currentQuestion--;
-  renderSurveyForm();
-}
-
-// Handle form submission
-async function handleFormSubmit(event) {
-  event.preventDefault();
-
-  // Save the last question's answer
-  formData[`${questions[currentQuestion].id}_answer`] = document.getElementById(
-    questions[currentQuestion].id
-  ).value;
-
-  // Validate all fields
-  if (
-    !formData.name ||
-    !formData.email ||
-    !formData.question1_answer ||
-    !formData.question2_answer
-  ) {
-    alert("Please fill out all fields");
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/submit_survey.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+    const formData = new FormData(form);
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value;
     });
 
-    const result = await response.json();
+    try {
+      // Display loading state
+      submitButton.disabled = true;
+      submitButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
-    if (result.success) {
-      // Show completion message
-      document.getElementById("survey-container").style.display = "none";
-      document.getElementById("completion-message").style.display = "block";
-    } else {
-      alert(result.message || "There was an error submitting your survey");
+      // Update to use your serverless function instead of PHP
+      const response = await fetch("/.netlify/functions/submit-survey", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formDataObj),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Show completion message
+        surveyContainer.style.display = "none";
+        const completionMessage = document.getElementById("completion-message");
+        if (completionMessage) {
+          completionMessage.style.display = "block";
+          // Scroll to completion message
+          completionMessage.scrollIntoView({ behavior: "smooth" });
+        } else {
+          console.error("Completion message element not found");
+          alert("Thank you for your submission!");
+        }
+      } else {
+        // Show error
+        alert("Error: " + (result.message || "Unknown error"));
+        submitButton.disabled = false;
+        submitButton.textContent = "Send Me My Free PoV";
+      }
+    } catch (error) {
+      console.error("Error submitting survey:", error);
+      alert("An error occurred. Please try again.");
+      submitButton.disabled = false;
+      submitButton.textContent = "Send Me My Free PoV";
     }
-  } catch (error) {
-    console.error("Error submitting survey:", error);
-    alert("There was an error submitting your survey. Please try again.");
-  }
+  });
 }
 
-// Initialize the app
-document.addEventListener("DOMContentLoaded", checkUserSubmission);
+function createFormGroup(id, labelText, type, required = false) {
+  const group = document.createElement("div");
+  group.className = "form-group";
+
+  const label = document.createElement("label");
+  label.setAttribute("for", id);
+  label.textContent = labelText;
+
+  const input = document.createElement("input");
+  input.type = type;
+  input.id = id;
+  input.name = id;
+  if (required) input.required = true;
+
+  group.appendChild(label);
+  group.appendChild(input);
+
+  return group;
+}
