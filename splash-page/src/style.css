@@ -105,6 +105,9 @@ nav {
   transform: translateY(-3px);
 }
 
+/* Additional Padding  */
+
+
 /* Hero Section */
 #hero {
   text-align: center;
@@ -125,7 +128,7 @@ nav {
 .hero-text {
   font-size: 1.2rem;
   max-width: 700px;
-  margin: 0 auto 3rem;
+  margin: 0 auto;
   opacity: 0.9;
 }
 
@@ -402,6 +405,13 @@ footer {
 }
 
 @media (max-width: 480px) {
+  #hero, 
+  #about,
+  #survey-section { 
+    margin-left: 2em;
+    margin-right: 2em;
+  }
+
   #hero {
     padding: 3rem 5% 5rem;
   }
