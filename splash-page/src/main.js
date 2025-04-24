@@ -77,7 +77,7 @@ function loadAOSfromCDN() {
 async function checkCompletion() {
   try {
     // Fix: Use absolute path and ensure it's correctly pointing to the PHP file
-    const response = await fetch("check_completion.php", {
+    const response = await fetch("../api/check_completion.php", {
       method: "GET",
       headers: {
         Accept: "application/json",
