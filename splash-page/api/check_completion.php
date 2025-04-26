@@ -1,6 +1,6 @@
 <?php
 // Include configuration file
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
