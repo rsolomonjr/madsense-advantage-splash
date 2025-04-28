@@ -76,8 +76,8 @@ function loadAOSfromCDN() {
 
 async function checkCompletion() {
   try {
-    // Fix: Use absolute path and ensure it's correctly pointing to the PHP file
-    const response = await fetch("api/check_completion.php", {
+    // Updated path to correctly point to the PHP file in the /api folder
+    const response = await fetch("../api/check_completion.php", {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -220,8 +220,8 @@ function initializeSurvey(completionMessageElement) {
       submitButton.innerHTML =
         '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
-      // Fix: Use absolute path
-      const response = await fetch("api/submit_survey.php", {
+      // Updated path to correctly point to the PHP file in the /api folder
+      const response = await fetch("../api/submit_survey.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
