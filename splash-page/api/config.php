@@ -15,12 +15,6 @@ $user = "rodnjrpf_mtmad"; // Replace with your MySQL username
 $password = "H@le3ndSaka2"; // Replace with your MySQL password
 $database = "rodnjrpf_madsense";
 
-//  madsensense.tech 
-// $host = "localhost:3306";
-// $user = "frienef2_rsolomon"; // Replace with your MySQL username
-// $password = "H@le3ndSaka2"; // Replace with your MySQL password
-// $database = "frienef2_madsense";
-
 
 // Error handling for database connection
 try {
