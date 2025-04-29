@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
-//require_once 'vendor/autoload.php'; // For PHPMailer
+require_once __DIR__ . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -107,14 +107,23 @@ try {
 function getPdfPath($topicCode) {
     // Define PDF paths in src/assets/ directory
     $pdfFiles = [
-        'programmatic' => 'src/assets/pdfs/MadSense_Programmatic_Advertising_PoV.pdf',
-        'identities' => 'src/assets/pdfs/MadSense_Identity_Resolution_PoV.pdf',
-        'cookies' => 'src/assets/pdfs/MadSense_Cookieless_Targeting_PoV.pdf',
-        'attribution' => 'src/assets/pdfs/MadSense_Attribution_PoV.pdf',
-        'privacy' => 'src/assets/pdfs/MadSense_Privacy_Regulations_PoV.pdf',
-        'ai' => 'src/assets/pdfs/MadSense_AI_Advertising_PoV.pdf',
-        'default' => 'src/assets/pdfs/MadSense_AdTech_PoV.pdf'
+        'programmatic' => 'MADSense_PoV_OpenAPs.pdf',
+        'identities' => 'MADSense_PoV_OpenAPs.pdf',
+        'cookies' => 'MADSense_PoV_OpenAPs.pdf',
+        'attribution' => 'MADSense_PoV_OpenAPs.pdf',
+        'privacy' => 'MADSense_PoV_OpenAPs.pdf',
+        'ai' => 'MADSense_PoV_OpenAPs.pdf',
+        'openaps' => 'MADSense_PoV_OpenAPs.pdf', // Added the OpenAPs PDF
+        'default' => 'MADSense_PoV_OpenAPs.pdf'
     ];
+    
+    // If the topic is "openaps", return that PDF path directly
+    if ($topicCode === 'openaps') {
+        $absolutePath = __DIR__ . '/' . $pdfFiles[$topicCode];
+        if (file_exists($absolutePath)) {
+            return $absolutePath;
+        }
+    }
     
     // Get the path for the selected topic or use default
     $pdfPath = isset($pdfFiles[$topicCode]) ? $pdfFiles[$topicCode] : $pdfFiles['default'];
@@ -140,8 +149,8 @@ function sendEmail($name, $email, $pdfPath, $topicCode) {
         // Define SMTP constants if not available in config.php
         if (!defined('SMTP_HOST')) define('SMTP_HOST', 'mail.madsense.tech');
         if (!defined('SMTP_USERNAME')) define('SMTP_USERNAME', 'info@madsense.tech');
-        if (!defined('SMTP_PASSWORD')) define('SMTP_PASSWORD', 'your_email_password');
-        if (!defined('SMTP_PORT')) define('SMTP_PORT', 587);
+        if (!defined('SMTP_PASSWORD')) define('SMTP_PASSWORD', 'u9hoC@8EbPQ^rBrG');
+        if (!defined('SMTP_PORT')) define('SMTP_PORT', 465);
         
         $mail = new PHPMailer(true);
         
@@ -220,7 +229,8 @@ function getTopicTitle($topicCode) {
         'cookies' => 'Cookieless Targeting',
         'attribution' => 'Multi-touch Attribution',
         'privacy' => 'Privacy Regulations',
-        'ai' => 'AI in Advertising'
+        'ai' => 'AI in Advertising',
+        'openaps' => 'Open APIs' // Added Open APIs topic title
     ];
     
     return isset($topics[$topicCode]) ? $topics[$topicCode] : 'AdTech';
