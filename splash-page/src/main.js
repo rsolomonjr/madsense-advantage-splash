@@ -77,7 +77,7 @@ function loadAOSfromCDN() {
 async function checkCompletion() {
   try {
     // Use path relative to the web root instead of the current directory
-    const response = await fetch("/api/check_completion.php", {
+    const response = await fetch("api/check_completion.php", {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -221,7 +221,7 @@ function initializeSurvey(completionMessageElement) {
         '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
       // Use path relative to the web root instead of the current directory
-      const response = await fetch("/api/submit_survey.php", {
+      const response = await fetch("api/submit_survey.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
