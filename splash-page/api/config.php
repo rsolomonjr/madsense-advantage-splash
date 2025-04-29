@@ -15,7 +15,6 @@ $user = "rodnjrpf_mtmad"; // Replace with your MySQL username
 $password = "H@le3ndSaka2"; // Replace with your MySQL password
 $database = "rodnjrpf_madsense";
 
-
 // Error handling for database connection
 try {
     $conn = new mysqli($host, $user, $password, $database);
