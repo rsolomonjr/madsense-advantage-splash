@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog | MadSense</title>
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Poppins:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Main stylesheet -->
+    <link href="/src/style.css" rel="stylesheet" />
+</head>
+
+<body class="white-bg">
+    <header class="sticky">
+        <nav>
+            <div class="logo-container compact">
+                <img alt="MadSense Logo" id="logo" class="compact" src="/src/assets/images/madsense-logo.jpg" />
+                <h1 id="title"><img alt="MadSense Logo" class="logo-title compact" src="/src/assets/images/1-02.png" /></h1>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <div class="social-links">
+                    <a href="https://x.com/MADSenseTech" target="_blank" class="social-link dark">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/company/madsensetech" target="_blank" class="social-link dark">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container blog-main">
+        <div class="breadcrumbs">
+            <a href="index.html">MadSense</a> > Blog
+        </div>
+
+        <div class="page-header">
+            <h1 class="page-title">MADTech Insights</h1>
+            <p class="page-subtitle">Navigate the complex world of marketing and advertising technology</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Search posts..." id="searchInput">
+                <button class="search-btn" onclick="searchPosts()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="blog-grid" id="blogGrid">
+            <!-- Blog posts will be populated here -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be populated here -->
+        </div>
+    </main>
+
+    <footer class="blog-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img alt="MadSense Logo" class="footer-logo-img" src="/src/assets/images/1-01.jpg" />
+                    <p>MADSense Inc.</p>
+                </div>
+
+                <div class="footer-links">
+                    <a class="footer-link" href="privacypolicy.html">Privacy Policy</a>
+                    <a class="footer-link" href="terms.html">Terms of Service</a>
+                    <a class="footer-link" href="mailto:contact@madsense.tech">Contact Us</a>
+                </div>
+
+                <div class="footer-social">
+                    <a href="https://x.com/MADSenseTech" target="_blank" class="footer-social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/company/madsensetech" target="_blank" class="footer-social-link">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="copyright">&copy; 2025 MadSense Inc. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script>
+        // Blog posts data
+        const blogPosts = [
+            {
+                id: 'ai-for-marketers',
+                title: 'AI for Marketers: Navigating the Complex Ecosystem',
+                excerpt: 'AI transforms marketing through data exploration',
+                url: 'ai-for-marketers.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 24
+            },
+            {
+                id: 'analytics',
+                title: 'Analytics: Navigating the Complex Ecosystem',
+                excerpt: 'Business outcomes matter most in analytics',
+                url: 'analytics.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 18
+            },
+            {
+                id: 'cookieless-targeting',
+                title: 'Cookieless Targeting: Navigating the Complex Ecosystem',
+                excerpt: 'Rethinking audience recognition without third-party cookies',
+                url: 'cookieless-targeting.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 32
+            },
+            {
+                id: 'identity-resolution',
+                title: 'Identity Resolution: Navigating the Complex Ecosystem',
+                excerpt: 'Balancing precision with privacy in identification',
+                url: 'identity-resolution.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 27
+            },
+            {
+                id: 'privacy-regulations',
+                title: 'Privacy Regulations: Navigating the Complex Ecosystem',
+                excerpt: 'Dynamic privacy landscape impacts data usage',
+                url: 'privacy-regulations.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 21
+            },
+            {
+                id: 'programmatic',
+                title: 'Programmatic Advertising: Navigating the Complex Ecosystem',
+                excerpt: 'Real-time bidding transforms digital advertising',
+                url: 'programmatic.html',
+                date: 'May 20, 2025',
+                author: 'MadSense',
+                likes: 29
+            }
+        ];
+
+        let currentPage = 1;
+        const postsPerPage = 12;
+        let filteredPosts = [...blogPosts];
+        let likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+
+        function renderPosts() {
+            const blogGrid = document.getElementById('blogGrid');
+            const startIndex = (currentPage - 1) * postsPerPage;
+            const endIndex = startIndex + postsPerPage;
+            const postsToShow = filteredPosts.slice(startIndex, endIndex);
+
+            blogGrid.innerHTML = postsToShow.map(post => `
+                <article class="blog-card">
+                    <div class="card-image"></div>
+                    <div class="card-content">
+                        <div class="card-meta">
+                            <div class="author-info">
+                                <div class="author-avatar"></div>
+                                <span>${post.author}</span>
+                            </div>
+                            <span>${post.date}</span>
+                        </div>
+                        <h3 class="card-title">${post.title}</h3>
+                        <p class="card-excerpt">${post.excerpt}</p>
+                        <div class="card-actions">
+                            <a href="${post.url}" class="read-more">
+                                Read More <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <button class="like-btn ${likedPosts.includes(post.id) ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+                                <i class="fas fa-heart"></i>
+                                <span id="likes-${post.id}">${post.likes + (likedPosts.includes(post.id) ? 1 : 0)}</span>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+
+            // Previous button
+            if (currentPage > 1) {
+                paginationHTML += `<a href="#" class="page-btn" onclick="changePage(${currentPage - 1})">← Previous</a>`;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<span class="page-btn active">${i}</span>`;
+                } else {
+                    paginationHTML += `<a href="#" class="page-btn" onclick="changePage(${i})">${i}</a>`;
+                }
+            }
+
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHTML += `<a href="#" class="page-btn" onclick="changePage(${currentPage + 1})">Next →</a>`;
+            }
+
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderPosts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function searchPosts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredPosts = [...blogPosts];
+            } else {
+                filteredPosts = blogPosts.filter(post => 
+                    post.title.toLowerCase().includes(searchTerm) ||
+                    post.excerpt.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            currentPage = 1;
+            renderPosts();
+        }
+
+        function toggleLike(postId) {
+            const likesElement = document.getElementById(`likes-${postId}`);
+            const likeBtn = likesElement.parentElement;
+            
+            if (likedPosts.includes(postId)) {
+                // Unlike
+                likedPosts = likedPosts.filter(id => id !== postId);
+                likeBtn.classList.remove('liked');
+                const post = blogPosts.find(p => p.id === postId);
+                likesElement.textContent = post.likes;
+            } else {
+                // Like
+                likedPosts.push(postId);
+                likeBtn.classList.add('liked');
+                const post = blogPosts.find(p => p.id === postId);
+                likesElement.textContent = post.likes + 1;
+            }
+            
+            localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchPosts();
+            }
+        });
+
+        // Search on input change (real-time search)
+        document.getElementById('searchInput').addEventListener('input', function() {
+            searchPosts();
+        });
+
+        // Initialize
+        renderPosts();
+    </script>
+</body>
+
+</html>

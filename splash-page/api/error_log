@@ -1,0 +1,36 @@
+[27-Apr-2025 11:51:04 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Programmatic_Advertising_PoV.pdf
+[27-Apr-2025 11:51:04 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[27-Apr-2025 12:07:57 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Identity_Resolution_PoV.pdf
+[27-Apr-2025 12:07:57 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[27-Apr-2025 15:26:22 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Privacy_Regulations_PoV.pdf
+[27-Apr-2025 15:26:22 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[28-Apr-2025 11:25:55 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Identity_Resolution_PoV.pdf
+[28-Apr-2025 11:25:55 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[28-Apr-2025 11:30:16 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Programmatic_Advertising_PoV.pdf
+[28-Apr-2025 11:30:16 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[28-Apr-2025 20:56:43 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_Attribution_PoV.pdf
+[28-Apr-2025 20:56:43 America/Boise] Default PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MadSense_AdTech_PoV.pdf
+[29-Apr-2025 00:47:42 America/Boise] PHP Warning:  require_once(/home2/frienef2/public_html/madsense/api/vendor/autoload.php): failed to open stream: No such file or directory in /home2/frienef2/public_html/madsense/api/submit_survey.php on line 3
+[29-Apr-2025 00:47:42 America/Boise] PHP Fatal error:  require_once(): Failed opening required '/home2/frienef2/public_html/madsense/api/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home2/frienef2/public_html/madsense/api/submit_survey.php on line 3
+[29-Apr-2025 00:53:59 America/Boise] PHP Fatal error:  Uncaught Error: Class 'PHPMailer\PHPMailer\PHPMailer' not found in /home2/frienef2/public_html/madsense/api/submit_survey.php:146
+Stack trace:
+#0 /home2/frienef2/public_html/madsense/api/submit_survey.php(85): sendEmail('Rodney V Solomo...', 'rodneysolomonjr...', '/home2/frienef2...', 'programmatic')
+#1 {main}
+  thrown in /home2/frienef2/public_html/madsense/api/submit_survey.php on line 146
+[29-Apr-2025 00:57:17 America/Boise] PHP Warning:  require_once(vendor/autoload.php): failed to open stream: No such file or directory in /home2/frienef2/public_html/madsense/api/submit_survey.php on line 3
+[29-Apr-2025 00:57:17 America/Boise] PHP Fatal error:  require_once(): Failed opening required 'vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home2/frienef2/public_html/madsense/api/submit_survey.php on line 3
+[29-Apr-2025 01:06:29 America/Boise] Email Error: SMTP Error: Could not connect to SMTP host.
+[29-Apr-2025 01:12:03 America/Boise] Email Error: SMTP Error: Could not connect to SMTP host.
+[29-Apr-2025 01:15:30 America/Boise] Email Error: SMTP Error: Could not connect to SMTP host.
+[29-Apr-2025 01:16:00 America/Boise] Email Error: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+[29-Apr-2025 01:35:06 America/Boise] Email Error: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+[01-Jun-2025 16:15:05 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Analytics.pdf
+[01-Jun-2025 16:15:37 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Privacy.pdf
+[01-Jun-2025 16:20:41 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Cookieless.pdf
+[01-Jun-2025 16:55:02 America/Boise] Warning: Form submitted without reCAPTCHA verification
+[01-Jun-2025 16:55:02 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Cookieless.pdf
+[01-Jun-2025 16:58:41 America/Boise] Warning: Form submitted without reCAPTCHA verification
+[01-Jun-2025 16:58:41 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Privacy.pdf
+[01-Jun-2025 17:01:15 America/Boise] Warning: Form submitted without reCAPTCHA verification
+[01-Jun-2025 17:01:15 America/Boise] PDF file not found: /home2/frienef2/public_html/madsense/src/assets/pdfs/MADSense_PoV_Identity.pdf
+[01-Jun-2025 17:16:28 America/Boise] Warning: Form submitted without reCAPTCHA verification
